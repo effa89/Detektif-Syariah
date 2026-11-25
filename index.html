@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektif Syariah: Kes Harta Pusaka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700;800&family=Bangers&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        .font-title { font-family: 'Cinzel', serif; }
+        .font-sfx { font-family: 'Bangers', cursive; letter-spacing: 2px; }
+
+        /* Animasi & Kesan Visual Webtoon */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float { animation: floatSlow 4s ease-in-out infinite; }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            15% { transform: translate(-8px, 6px) rotate(-1deg); }
+            30% { transform: translate(8px, -6px) rotate(1deg); }
+            45% { transform: translate(-6px, -4px) rotate(-0.5deg); }
+            60% { transform: translate(6px, 4px) rotate(0.5deg); }
+            75% { transform: translate(-3px, 2px) rotate(0deg); }
+        }
+        .shake-effect { animation: screenShake 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes sfxPop {
+            0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+            60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+        }
+        .sfx-animate { animation: sfxPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Garisan Kelajuan Manhwa (Speed Lines) */
+        .speed-lines {
+            background: repeating-radial-gradient(
+                circle at 50% 50%,
+                transparent 0,
+                transparent 40px,
+                rgba(255, 255, 255, 0.04) 41px,
+                transparent 43px
+            );
+        }
+
+        /* Gaya Panel Komik */
+        .webtoon-panel {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.1);
+            transition: background 0.8s ease;
+        }
+
+        /* Buih Dialog */
+        .dialogue-box {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.94) 0%, rgba(9, 13, 22, 0.98) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950">
+
+    <!-- Bekas Utama Permainan -->
+    <div id="game-container" class="w-full max-w-4xl bg-slate-900 rounded-2xl overflow-hidden webtoon-panel relative flex flex-col min-h-[620px] sm:min-h-[680px]">
+        
+        <!-- Bar Status Atas (HUD) -->
+        <header id="hud-bar" class="hidden flex items-center justify-between px-4 py-3 bg-slate-950/90 border-b border-slate-800 z-30">
+            <div class="flex items-center space-x-3">
+                <span id="chapter-badge" class="px-3 py-1 bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold uppercase tracking-wider rounded-full">
+                    Babak 1
+                </span>
+                <span id="location-label" class="text-xs sm:text-sm text-slate-300 font-medium truncate max-w-[140px] sm:max-w-xs">
+                    Pejabat Guaman KL
+                </span>
+            </div>
+
+            <!-- Meter Kredibiliti / Nyawa -->
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-1" title="Kredibiliti Hujah">
+                    <span class="text-xs text-slate-400 mr-1 hidden sm:inline">Kredibiliti:</span>
+                    <div id="credibility-hearts" class="flex space-x-1 text-rose-500 text-base">
+                        <span>⚖️</span><span>⚖️</span><span>⚖️</span>
+                    </div>
+                </div>
+
+                <!-- Butang Fail Bukti -->
+                <button onclick="toggleEvidenceModal()" class="relative flex items-center space-x-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold transition transform active:scale-95">
+                    <span>📁 Fail Bukti</span>
+                    <span id="evidence-count" class="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- SKRIN UTAMA (TITLE SCREEN) -->
+        <div id="title-screen" class="flex-1 flex flex-col items-center justify-center p-6 text-center relative bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950">
+            <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#10b981 1px, transparent 1px); background-size: 24px 24px;"></div>
+            
+            <div class="mb-4 inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold tracking-widest uppercase">
+                <span>⚖️ Novel Visual Penyiasatan Webtoon</span>
+            </div>
+
+            <h1 class="font-title text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 drop-shadow-lg mb-2">
+                DETEKTIF SYARIAH
+            </h1>
+            <p class="text-base sm:text-xl text-emerald-300 font-semibold tracking-wide mb-6">
+                Edisi Lengkap: Pendidikan Syariah Islamiah Tingkatan 5 (KSSM)
+            </p>
+
+            <!-- Kad Watak Pratonton -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-5 max-w-xl w-full mb-6">
+                <div class="bg-slate-800/70 border border-slate-700 p-3 rounded-xl flex flex-col items-center">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-700 flex items-center justify-center mb-1.5 border-2 border-sky-400 overflow-hidden">
+                        <!-- Avatar SVG Syafiq -->
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <rect width="100" height="100" fill="#1e293b"/>
+                            <path d="M20 100 C20 75, 80 75, 80 100" fill="#f8fafc"/>
+                            <path d="M42 75 L50 92 L58 75" fill="#0f172a"/>
+                            <circle cx="50" cy="46" r="22" fill="#d99b72"/>
+                            <path d="M28 40 C28 18, 72 18, 72 40 C72 28, 28 28, 28 40 Z" fill="#0f172a"/>
+                            <path d="M36 44 L45 46 M64 44 L55 46" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="41" cy="50" r="2.5" fill="#0f172a"/>
+                            <circle cx="59" cy="50" r="2.5" fill="#0f172a"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-white">Insp. Syafiq</span>
+                    <span class="text-[10px] text-sky-400">Penyiasat Utama</span>
+                </div>
+
+                <div class="bg-slate-800/70 border border-slate-700 p-3 rounded-xl flex flex-col items-center">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-700 flex items-center justify-center mb-1.5 border-2 border-emerald-400 overflow-hidden">
+                        <!-- Avatar SVG Aina -->
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <rect width="100" height="100" fill="#064e3b"/>
+                            <path d="M18 100 C18 72, 82 72, 82 100" fill="#047857"/>
+                            <path d="M26 48 C26 20, 74 20, 74 48 C74 75, 65 85, 50 85 C35 85, 26 75, 26 48 Z" fill="#e7d3be"/>
+                            <circle cx="50" cy="48" r="18" fill="#e6b08a"/>
+                            <circle cx="43" cy="48" r="2.5" fill="#1e293b"/>
+                            <circle cx="57" cy="48" r="2.5" fill="#1e293b"/>
+                            <path d="M46 57 Q50 60 54 57" stroke="#be123c" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-white">Aina</span>
+                    <span class="text-[10px] text-emerald-400">Peguam Syarie</span>
+                </div>
+
+                <div class="bg-slate-800/70 border border-slate-700 p-3 rounded-xl flex flex-col items-center">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-700 flex items-center justify-center mb-1.5 border-2 border-rose-500 overflow-hidden">
+                        <!-- Avatar SVG Dato' Azman -->
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <rect width="100" height="100" fill="#1f2937"/>
+                            <path d="M15 100 C15 72, 85 72, 85 100" fill="#374151"/>
+                            <path d="M46 75 L50 95 L54 75" fill="#881337"/>
+                            <circle cx="50" cy="46" r="21" fill="#c6865c"/>
+                            <path d="M29 38 C29 18, 71 18, 71 38 C65 28, 35 28, 29 38 Z" fill="#9ca3af"/>
+                            <rect x="35" y="45" width="12" height="7" rx="1" fill="none" stroke="#e5e7eb" stroke-width="1.5"/>
+                            <rect x="53" y="45" width="12" height="7" rx="1" fill="none" stroke="#e5e7eb" stroke-width="1.5"/>
+                            <line x1="47" y1="48" x2="53" y2="48" stroke="#e5e7eb" stroke-width="1.5"/>
+                            <path d="M45 60 Q52 57 57 61" stroke="#4b5563" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-bold text-white">Dato' Azman</span>
+                    <span class="text-[10px] text-rose-400">Dalang Kes</span>
+                </div>
+            </div>
+
+            <!-- Pilihan Fail Kes Mengikut 6 Bidang DSKP Tingkatan 5 -->
+            <div class="w-full max-w-3xl text-left mb-6">
+                <div class="flex items-center justify-between mb-2.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400">📂 Pilih Fail Kes (6 Bidang Utama KSSM Tingkatan 5):</span>
+                    <span id="completed-counter" class="text-xs text-emerald-400 font-semibold">Selesai: 0/6 Bidang</span>
+                </div>
+                <div id="case-selector-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Dijana secara dinamik oleh JS -->
+                </div>
+            </div>
+
+            <button onclick="startCase('bidang1')" class="group relative inline-flex items-center justify-center px-7 py-3.5 font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-xl shadow-lg shadow-amber-500/30 hover:from-amber-300 hover:to-yellow-400 transition-all transform hover:scale-105 active:scale-95 text-sm sm:text-base">
+                <span>MULA DARI BIDANG 1 (AYAT HUKUM)</span>
+                <svg class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+            </button>
+        </div>
+
+        <!-- PENTAS VISUAL WEBTOON (STAGE) -->
+        <div id="scene-stage" class="hidden flex-1 flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Latar Belakang Babak Dinamik -->
+            <div id="scene-bg" class="absolute inset-0 transition-all duration-700 bg-gradient-to-b from-amber-900/40 via-slate-900 to-slate-950"></div>
+            
+            <!-- Elemen Seni Latar Belakang (Siluet Tingkap / Masjid / Bilik Soal Siasat) -->
+            <div id="bg-art-layer" class="absolute inset-0 pointer-events-none opacity-30 flex items-center justify-center"></div>
+
+            <!-- Kesan Bunyi Pop-up (SFX) -->
+            <div id="sfx-banner" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+                <span id="sfx-text" class="font-sfx text-5xl sm:text-7xl text-rose-500 drop-shadow-[0_4px_0_#ffffff] stroke-white">BAM!!</span>
+            </div>
+
+            <!-- Kawasan Watak & Interaksi Tengah -->
+            <div class="relative z-10 flex-1 flex flex-col items-center justify-end pt-6 px-4">
+                
+                <!-- Mod Siasatan Bukit / Hotspot (Muncul pada babak tertentu) -->
+                <div id="investigation-overlay" class="hidden w-full max-w-lg bg-slate-900/90 border-2 border-amber-500/60 rounded-2xl p-4 mb-4 shadow-2xl backdrop-blur-md z-20">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center">
+                            🔍 Mod Pemeriksaan Dokumen
+                        </span>
+                        <span id="clue-progress" class="text-xs text-slate-300 font-semibold">Petunjuk: 0/2</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mb-3">Klik pada bahagian mencurigakan pada Sijil Perakuan Nikah & Hibah di bawah:</p>
+                    
+                    <!-- Dokumen Interaktif SVG -->
+                    <div class="relative bg-[#f5ebd6] text-slate-900 p-4 rounded-xl border-4 border-amber-800/40 shadow-inner font-serif">
+                        <div class="text-center border-b border-slate-400 pb-2 mb-2">
+                            <p class="text-[10px] uppercase tracking-widest text-slate-600">Jabatan Agama Islam Negeri</p>
+                            <h4 class="font-bold text-sm sm:text-base text-slate-900">SURAT PERAKUAN NIKAH, NASAB & HIBAH</h4>
+                            <p class="text-[10px] text-slate-600">Tarikh Daftar: 14 Ogos 2018 | Masjid Al-Qadim</p>
+                        </div>
+                        <p class="text-xs leading-relaxed mb-3">
+                            Adalah disahkan bahawa Allahyarham Tan Sri Ahmad telah bersetuju menghibahkan harta anak yatim & menasabkan anak angkat kepada <span class="font-bold">Dato' Azman</span> di hadapan saksi-saksi berikut.
+                        </p>
+
+                        <!-- Hotspot 1: Tandatangan Saksi -->
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-400/60">
+                            <button id="hotspot-1" onclick="inspectClue(1)" class="text-left p-2 rounded-lg border-2 border-dashed border-rose-500/70 bg-rose-500/10 hover:bg-rose-500/20 transition relative group">
+                                <span class="block text-[10px] font-bold text-slate-700">Saksi Utama:</span>
+                                <span class="font-mono text-xs italic text-slate-900">Hj. Ismail (14/08/2018)</span>
+                                <span class="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">Periksa</span>
+                            </button>
+
+                            <!-- Hotspot 2: Cetakan & Dakwat -->
+                            <button id="hotspot-2" onclick="inspectClue(2)" class="text-left p-2 rounded-lg border-2 border-dashed border-sky-600/70 bg-sky-500/10 hover:bg-sky-500/20 transition relative group">
+                                <span class="block text-[10px] font-bold text-slate-700">No. Siri & Cetakan:</span>
+                                <span class="font-sans text-xs font-semibold text-slate-900">MY-2018-8841 (Laser)</span>
+                                <span class="absolute -top-2 -right-2 bg-sky-600 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">Periksa</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paparan Watak Aktif (Character Sprite Webtoon Style) -->
+                <div id="character-stage" class="flex items-end justify-center space-x-2 sm:space-x-8 w-full max-w-2xl h-48 sm:h-56 pointer-events-none">
+                    <!-- Watak Kiri (Syafiq) -->
+                    <div id="char-syafiq" class="transition-all duration-300 transform translate-y-2 opacity-40 scale-95 flex flex-col items-center">
+                        <svg viewBox="0 0 160 180" class="w-32 h-40 sm:w-40 sm:h-48 drop-shadow-2xl">
+                            <!-- Badan Kemeja Putih -->
+                            <path d="M25 180 C25 125, 135 125, 135 180 Z" fill="#f8fafc"/>
+                            <path d="M62 125 L80 155 L98 125" fill="#e2e8f0"/>
+                            <!-- Lanyard Detektif -->
+                            <path d="M65 125 L78 165 L82 165 L95 125" fill="none" stroke="#1e3a8a" stroke-width="4"/>
+                            <rect x="72" y="160" width="16" height="20" rx="2" fill="#0f172a" stroke="#fbbf24" stroke-width="1.5"/>
+                            <!-- Leher & Kepala -->
+                            <rect x="68" y="102" width="24" height="26" rx="8" fill="#c6865c"/>
+                            <ellipse cx="80" cy="75" rx="34" ry="40" fill="#d99b72"/>
+                            <!-- Rambut Fade Kemas -->
+                            <path d="M46 65 C44 25, 116 25, 114 65 C112 42, 48 42, 46 65 Z" fill="#0f172a"/>
+                            <!-- Mata & Kening Tegas -->
+                            <path d="M56 68 L72 72" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M104 68 L88 72" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="65" cy="78" r="3.5" fill="#0f172a"/>
+                            <circle cx="95" cy="78" r="3.5" fill="#0f172a"/>
+                            <!-- Mulut -->
+                            <path id="syafiq-mouth" d="M72 97 Q80 99 88 97" stroke="#7c2d12" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <!-- Watak Tengah / Antagonis (Dato' Azman - muncul masa soal siasat) -->
+                    <div id="char-azman" class="hidden transition-all duration-300 transform translate-y-2 opacity-100 scale-100 flex flex-col items-center">
+                        <svg viewBox="0 0 160 180" class="w-32 h-40 sm:w-40 sm:h-48 drop-shadow-2xl">
+                            <!-- Sut Charcoal Grey -->
+                            <path d="M20 180 C20 122, 140 122, 140 180 Z" fill="#334155"/>
+                            <path d="M62 125 L80 165 L98 125" fill="#f8fafc"/>
+                            <!-- Tali Leher Burgundy -->
+                            <polygon points="76,130 84,130 86,175 80,180 74,175" fill="#881337"/>
+                            <!-- Kepala -->
+                            <rect x="68" y="102" width="24" height="26" rx="8" fill="#b47449"/>
+                            <ellipse cx="80" cy="75" rx="34" ry="39" fill="#c6865c"/>
+                            <!-- Rambut Salt & Pepper -->
+                            <path d="M46 62 C46 26, 114 26, 114 62 C105 42, 55 42, 46 62 Z" fill="#94a3b8"/>
+                            <!-- Cermin Mata Rimless -->
+                            <rect x="55" y="71" width="20" height="12" rx="2" fill="rgba(255,255,255,0.15)" stroke="#e2e8f0" stroke-width="2"/>
+                            <rect x="85" y="71" width="20" height="12" rx="2" fill="rgba(255,255,255,0.15)" stroke="#e2e8f0" stroke-width="2"/>
+                            <line x1="75" y1="76" x2="85" y2="76" stroke="#e2e8f0" stroke-width="2"/>
+                            <circle cx="65" cy="77" r="3" fill="#0f172a"/>
+                            <circle cx="95" cy="77" r="3" fill="#0f172a"/>
+                            <!-- Peluh Panik (Tersembunyi awalnya) -->
+                            <path id="azman-sweat" class="hidden" d="M106 58 Q110 66 106 70 Q102 66 106 58 Z" fill="#38bdf8"/>
+                            <!-- Janggut Goatee & Mulut -->
+                            <path d="M72 98 Q80 94 88 98" stroke="#475569" stroke-width="3" fill="none"/>
+                        </svg>
+                    </div>
+
+                    <!-- Watak Kanan (Aina) -->
+                    <div id="char-aina" class="transition-all duration-300 transform translate-y-2 opacity-40 scale-95 flex flex-col items-center">
+                        <svg viewBox="0 0 160 180" class="w-32 h-40 sm:w-40 sm:h-48 drop-shadow-2xl">
+                            <!-- Blazer Hijau Emerald -->
+                            <path d="M28 180 C28 126, 132 126, 132 180 Z" fill="#047857"/>
+                            <path d="M64 126 L80 165 L96 126" fill="#fef3c7"/>
+                            <!-- Hijab Pastel Beige -->
+                            <path d="M40 75 C40 28, 120 28, 120 75 C120 120, 105 142, 80 142 C55 142, 40 120, 40 75 Z" fill="#e7d3be"/>
+                            <!-- Wajah -->
+                            <ellipse cx="80" cy="76" rx="28" ry="33" fill="#e6b08a"/>
+                            <!-- Mata Ekspresif -->
+                            <path d="M58 68 Q66 64 73 68" stroke="#1e293b" stroke-width="2.5" fill="none"/>
+                            <path d="M87 68 Q94 64 102 68" stroke="#1e293b" stroke-width="2.5" fill="none"/>
+                            <circle cx="66" cy="76" r="3.5" fill="#1e293b"/>
+                            <circle cx="94" cy="76" r="3.5" fill="#1e293b"/>
+                            <!-- Mulut -->
+                            <path id="aina-mouth" d="M74 94 Q80 98 86 94" stroke="#be123c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOTAK DIALOG & PILIHAN TINDAKAN (BAWAH) -->
+            <div class="relative z-20 dialogue-box p-4 sm:p-6">
+                <!-- Tag Nama Penutur -->
+                <div class="flex items-center justify-between mb-2">
+                    <span id="speaker-name" class="px-3.5 py-1 rounded-md text-xs sm:text-sm font-extrabold uppercase tracking-wider bg-sky-500 text-slate-950">
+                        Inspektor Syafiq
+                    </span>
+                    <span id="dialogue-type-tag" class="text-[11px] text-slate-400 italic"></span>
+                </div>
+
+                <!-- Teks Dialog -->
+                <p id="dialogue-text" class="text-sm sm:text-base text-slate-100 leading-relaxed min-h-[64px] sm:min-h-[72px] mb-4">
+                    Memuatkan fail kes...
+                </p>
+
+                <!-- Kawasan Pilihan Jawapan / Bukti (Muncul semasa soal siasat) -->
+                <div id="choices-container" class="hidden grid grid-cols-1 gap-2.5 mb-3"></div>
+
+                <!-- Butang Teruskan -->
+                <div id="next-btn-wrapper" class="flex justify-end">
+                    <button id="next-btn" onclick="nextStep()" class="inline-flex items-center px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition transform active:scale-95 shadow-lg shadow-emerald-500/20">
+                        <span>Seterusnya</span>
+                        <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKRIN TAMAT (VICTORY / GAME OVER) -->
+        <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-900 via-emerald-950/60 to-slate-950">
+            <div id="end-icon" class="text-6xl mb-4 animate-bounce">⚖️</div>
+            <h2 id="end-title" class="font-title text-3xl sm:text-5xl font-black text-amber-400 mb-3">
+                KEADILAN TERBELA!
+            </h2>
+            <p id="end-desc" class="max-w-lg text-sm sm:text-base text-slate-200 leading-relaxed mb-6">
+            <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 max-w-md w-full mb-6 text-left">
+                <p class="text-xs uppercase tracking-wider text-amber-400 font-bold mb-2">Ringkasan Penutupan Kes & Nota KSSM:</p>
+                <ul id="end-summary-list" class="text-xs text-slate-300 space-y-1.5">
+                    <!-- Diisi secara dinamik mengikut bidang -->
+                </ul>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <button onclick="returnToMenu()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold rounded-xl shadow-lg transition">
+                    Pilih Bidang Lain
+                </button>
+                <button id="next-case-btn" onclick="startNextCase()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl shadow-lg transition transform hover:scale-105">
+                    Siasat Bidang Seterusnya &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL FAIL BUKTI (EVIDENCE INVENTORY) -->
+        <div id="evidence-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                    <h3 class="font-bold text-base sm:text-lg text-amber-400 flex items-center">
+                        📁 Fail Bukti Siasatan
+                    </h3>
+                    <button onclick="toggleEvidenceModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">&times;</button>
+                </div>
+                <div id="evidence-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    <p class="text-xs text-slate-400 text-center py-6">Belum ada bukti direkodkan.</p>
+                </div>
+                <div class="mt-5 text-right">
+                    <button onclick="toggleEvidenceModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg">
+                        Tutup Fail
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFIKASI BUKTI BARU (TOAST) -->
+        <div id="toast-notification" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl shadow-2xl font-bold text-xs sm:text-sm flex items-center space-x-2 border-2 border-white">
+            <span>📌 Bukti Baru Direkodkan:</span>
+            <span id="toast-title">Nama Bukti</span>
+        </div>
+
+    </div>
+
+    <script>
+        // Senarai Lengkap 6 Bidang Pendidikan Syariah Islamiah Tingkatan 5 KSSM
+        const kssmCases = {
+            bidang1: {
+                id: 'bidang1',
+                code: 'Bidang 1',
+                title: 'Ayat Hukum',
+                subtitle: 'Riba, Harta Anak Yatim, Negara & Anak Angkat',
+                icon: '📖',
+                color: 'border-amber-500/50 hover:border-amber-400',
+                summary: [
+                    '✅ Menjauhi Riba (Al-Baqarah: 278-280): Riba al-Duyun & Riba al-Buyu\' haram dan menzalimi peminjam.',
+                    '✅ Pengurusan Harta Anak Yatim (An-Nisa\': 5-6): Wajib dipelihara hingga baligh & cerdik (rusyd) serta diserahkan bersaksikan saksi.',
+                    '✅ Mempertahankan Agama & Negara (Al-Hajj: 39-41): Jihad mempertahankan kedaulatan & keamanan negara.',
+                    '✅ Nasab Anak Angkat (Al-Ahzab: 5): Wajib dinasabkan kepada bapa kandung, bukan bapa angkat; tidak mewarisi faraid.'
+                ]
+            },
+            bidang2: {
+                id: 'bidang2',
+                code: 'Bidang 2',
+                title: 'Hadis Hukum',
+                subtitle: 'Arak, Zina, Bunuh Diri, Keganasan & Wakaf',
+                icon: '📜',
+                color: 'border-emerald-500/50 hover:border-emerald-400',
+                summary: [
+                    '✅ Menjauhi Arak: 10 golongan dilaknat berkaitan arak (pemerah, peminum, pembawa, penjual, dll).',
+                    '✅ Hukuman Zina: Sebatan 100 kali bagi Ghairu Muhsan dan rejam sampai mati bagi Muhsan (4 saksi adil / ikrar).',
+                    '✅ Menjauhi Jenayah Bunuh Diri & Perlakuan Ganas: Nyawa adalah amanah Allah; haram mencederakan diri & orang lain.',
+                    '✅ Wakaf: Sedekah jariah berkekalan manfaatnya untuk maslahah ummah (wakaf am & wakaf khas).'
+                ]
+            },
+            bidang3: {
+                id: 'bidang3',
+                code: 'Bidang 3',
+                title: 'Usul Fiqh',
+                subtitle: 'Lafaz Am & Khas, Mutlak & Muqayyad, Nasakh',
+                icon: '⚖️',
+                color: 'border-sky-500/50 hover:border-sky-400',
+                summary: [
+                    '✅ Am & Khas: Lafaz Am merangkumi semua individu tanpa had, manakala Khas mengkhususkan sebahagian daripadanya (Takhsis).',
+                    '✅ Mutlak & Muqayyad: Mutlak ialah lafaz tanpa sifat/syarat tertentu, manakala Muqayyad terikat dengan sifat/syarat (Taqyid).',
+                    '✅ Nasakh: Pembatalan hukum syarak terdahulu (Mansukh) dengan dalil syarak yang datang kemudian (Nasikh).'
+                ]
+            },
+            bidang4: {
+                id: 'bidang4',
+                code: 'Bidang 4',
+                title: 'Fekah',
+                subtitle: 'Perkahwinan, Pembubaran (Talak/Fasakh/Khuluk) & Jenayah',
+                icon: '💍',
+                color: 'border-purple-500/50 hover:border-purple-400',
+                summary: [
+                    '✅ Perkahwinan: Rukun nikah (suami, isteri, wali, 2 saksi, sighah) & tanggungjawab nafkah.',
+                    '✅ Pembubaran Perkahwinan: Talak (lafaz cerai suami), Fasakh (pembatalan oleh hakim sebab mudarat/aib), Khuluk (tebus talak dengan bayaran).',
+                    '✅ Jenayah Islam: Hudud (hak Allah tetap), Qisas (balasan setimpal bunuh/cedera), dan Takzir (hukuman budi bicara hakim).'
+                ]
+            },
+            bidang5: {
+                id: 'bidang5',
+                code: 'Bidang 5',
+                title: 'Sejarah Perundangan',
+                subtitle: 'Institusi & Hierarki Mahkamah Syariah di Malaysia',
+                icon: '🏛️',
+                color: 'border-rose-500/50 hover:border-rose-400',
+                summary: [
+                    '✅ Sejarah: Berkembang daripada Undang-undang Melaka/Kanun negeri hingga pemisahan daripada Mahkamah Sivil (Perkara 121(1A)).',
+                    '✅ 3 Peringkat Mahkamah Syariah: Mahkamah Rendah Syariah, Mahkamah Tinggi Syariah, dan Mahkamah Rayuan Syariah.',
+                    '✅ Bidang Kuasa: Mal (kekeluargaan, faraid, wakaf, hibah) dan Jenayah Syariah (kesalahan terhadap rukun Islam/akhlak).'
+                ]
+            },
+            bidang6: {
+                id: 'bidang6',
+                code: 'Bidang 6',
+                title: 'Tamadun Islam',
+                subtitle: 'Kegemilangan Bani Abbasiyah & Bani Uthmaniyah',
+                icon: '🕌',
+                color: 'border-teal-500/50 hover:border-teal-400',
+                summary: [
+                    '✅ Bani Abbasiyah (Harun al-Rasyid & al-Makmun): Penubuhan Baitul Hikmah sebagai pusat penterjemahan dan penyelidikan ilmu.',
+                    '✅ Bani Uthmaniyah (Sultan Muhammad al-Fatih & Sulaiman al-Qanuni): Pembukaan Kota Constantinople & penggubalan Kanun Sulaiman.',
+                    '✅ Iktibar: Kestabilan politik, penguasaan ilmu sains & syariah, serta keadilan pemimpin memacu tamadun.'
+                ]
+            }
+        };
+
+        // Pangkalan Data Bukti Keseluruhan
+        const allEvidences = {
+            masjid: {
+                id: 'masjid',
+                title: 'Rekod Arkib Masjid Al-Qadim (Bidang 1)',
+                desc: 'Masjid ditutup pada Ogos 2018. Selain itu, anak angkat haram dinasabkan kepada bapa angkat (Surah al-Ahzab: 5) dan harta anak yatim wajib diserahkan bersaksikan saksi (Surah an-Nisa\': 6).'
+            },
+            imigresen: {
+                id: 'imigresen',
+                title: 'Log Imigresen & Kontrak Riba (Bidang 1)',
+                desc: 'Saksi utama berada di Mekah. Kontrak pinjaman Dato\' Azman juga mengandungi Riba al-Qardh (faedah tambahan atas hutang) yang diharamkan dalam Surah al-Baqarah: 278.'
+            },
+            forensik: {
+                id: 'forensik',
+                title: 'Analisis Dakwat Laser & Hibah Palsu',
+                desc: 'Dokumen bertarikh 2018 dicetak menggunakan pencetak laser moden kurang dari 6 bulan lepas.'
+            },
+            hadis_bukti: {
+                id: 'hadis_bukti',
+                title: 'Laporan Forensik Arak, Keganasan & Wakaf (Bidang 2)',
+                desc: 'Premis hiburan haram milik suspek menjual arak (10 golongan dilaknat) dan menceroboh tanah wakaf masjid yang tidak boleh dijual beli.'
+            },
+            usul_bukti: {
+                id: 'usul_bukti',
+                title: 'Kitab Qawaid Usul Fiqh (Bidang 3)',
+                desc: 'Membezakan lafaz Am (menyeluruh) dengan Khas (tertentu), Mutlak dengan Muqayyad, serta hukum Nasikh yang memansuhkan hukum terdahulu.'
+            },
+            fekah_bukti: {
+                id: 'fekah_bukti',
+                title: 'Rekod Munakahat & Jenayah Syariah (Bidang 4)',
+                desc: 'Bukti pengabaian nafkah membolehkan isteri menuntut Fasakh di mahkamah, manakala jenayah mencuri & qazaf tertakluk kepada hukum Hudud.'
+            },
+            mahkamah_bukti: {
+                id: 'mahkamah_bukti',
+                title: 'Enakmen Pentadbiran Agama Islam Negeri (Bidang 5)',
+                desc: 'Kes faraid bernilai tinggi berada di bawah bidang kuasa Mal Mahkamah Tinggi Syariah, dan rayuan didengar di Mahkamah Rayuan Syariah.'
+            },
+            tamadun_bukti: {
+                id: 'tamadun_bukti',
+                title: 'Manuskrip Baitul Hikmah & Kanun Sulaiman (Bidang 6)',
+                desc: 'Rekod keilmuan era Khalifah al-Makmun (Abbasiyah) dan sistem perundangan Sultan Sulaiman al-Qanuni (Uthmaniyah).'
+            }
+        };
+
+        // Struktur Jalan Cerita Mengikut Semua 6 Bidang
+        const casesStoryData = {
+            bidang1: [
+                {
+                    chapter: "Bidang 1: Ayat Hukum (Babak 1)",
+                    location: "Pejabat Guaman KL (Senja)",
+                    bgClass: "bg-gradient-to-b from-amber-700/40 via-orange-950/50 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    text: "Tengok dokumen tuntutan Dato' Azman ni, Syafiq. Dia bukan saja mahu bolot harta anak yatim arwah Tan Sri, malah menasabkan anak angkat arwah kepada dirinya dan mengenakan bunga pinjaman (riba)!"
+                },
+                {
+                    chapter: "Bidang 1: Ayat Hukum (Babak 1)",
+                    location: "Pejabat Guaman KL (Senja)",
+                    bgClass: "bg-gradient-to-b from-amber-700/40 via-orange-950/50 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    text: "Dalam Surah al-Ahzab ayat 5, anak angkat wajib dinasabkan kepada bapa kandungnya dan tidak mewarisi harta secara faraid! Mari kita periksa sijil palsu ni."
+                },
+                {
+                    chapter: "Bidang 1: Analisis Dokumen",
+                    location: "Meja Siasatan Pejabat",
+                    bgClass: "bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950",
+                    speaker: "Sistem Siasatan",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "both",
+                    isInvestigation: true,
+                    text: "Periksa DUA (2) bahagian mencurigakan pada sijil di atas untuk mengumpul petunjuk awal."
+                },
+                {
+                    chapter: "Bidang 1: Siasatan Lapangan",
+                    location: "Perkarangan Masjid Al-Qadim",
+                    bgClass: "bg-gradient-to-b from-emerald-800/40 via-teal-950/50 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    unlockEvidence: "masjid",
+                    text: "Rekod arkib membuktikan masjid ni ditutup pada Ogos 2018! Tambahan pula, Surah an-Nisa' ayat 6 mewajibkan penyerahan harta anak yatim mesti disaksikan oleh saksi yang adil."
+                },
+                {
+                    chapter: "Bidang 1: Soal Siasat (Riba & Harta Anak Yatim)",
+                    location: "Bilik Soal Siasat",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-rose-950/30 to-slate-950 speed-lines",
+                    speaker: "Dato' Azman",
+                    speakerColor: "bg-rose-500 text-white",
+                    activeChar: "azman",
+                    showAzman: true,
+                    sfx: "BAM!!",
+                    shake: true,
+                    text: "(Tersenyum sinis) Saya cuma caj faedah tambahan 15% atas hutang arwah! Apa salahnya dalam perniagaan, Inspektor?!"
+                },
+                {
+                    chapter: "Bidang 1: Soal Siasat (Hujah Ayat Hukum)",
+                    location: "Bilik Soal Siasat",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-rose-950/30 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "syafiq",
+                    showAzman: true,
+                    isChoice: true,
+                    text: "Dato' Azman cuba menghalalkan tambahan bayaran atas hutang & membolot harta anak yatim. Pilih hujah Ayat Hukum yang tepat!",
+                    choices: [
+                        { text: "Itu Riba al-Qardh (Surah al-Baqarah: 278) & zalim terhadap harta anak yatim (An-Nisa': 6)!", correct: true, reply: "TEPAT! Allah memerintahkan agar meninggalkan saki-baki riba dan melarang memakan harta anak yatim secara batil!" },
+                        { text: "Riba hanya haram jika melebihi 50% daripada jumlah hutang asal", correct: false, reply: "Aina menegur: 'Salah Syafiq! Sebarang tambahan yang disyaratkan dalam hutang tetap haram walau 1%!'" },
+                        { text: "Bapa angkat berhak mengambil semua harta anak angkat secara faraid", correct: false, reply: "Dato' Azman ketawa: 'Kamu sendiri tak faham hukum faraid, Inspektor!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 1: Penutup Kes",
+                    location: "Mahkamah Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    isFinal: true,
+                    text: "Alhamdulillah! Tuntutan riba dan pemalsuan nasab dibatalkan. Hak anak-anak yatim serta kedaulatan undang-undang syariah (Surah al-Hajj: 39-41) terus terpelihara!"
+                }
+            ],
+
+            bidang2: [
+                {
+                    chapter: "Bidang 2: Hadis Hukum (Siasatan Premis)",
+                    location: "Gudang & Tanah Wakaf Pinggir Kota",
+                    bgClass: "bg-gradient-to-b from-emerald-900/40 via-slate-900 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    unlockEvidence: "hadis_bukti",
+                    text: "Aina, kita terima aduan bahawa sindiket Dato' Azman menjalankan aktiviti pengedaran arak secara haram di atas tanah yang sebenarnya berstatus Tanah Wakaf!"
+                },
+                {
+                    chapter: "Bidang 2: Hadis Hukum (Analisis Dalil)",
+                    location: "Gudang & Tanah Wakaf Pinggir Kota",
+                    bgClass: "bg-gradient-to-b from-emerald-900/40 via-slate-900 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    text: "Bukan itu saja! Suspek utama yang ditahan cuba mencederakan dirinya sendiri (cubaan bunuh diri) kerana takut didakwa atas kesalahan qazaf dan zina."
+                },
+                {
+                    chapter: "Bidang 2: Soal Siasat (Hukum Arak & Wakaf)",
+                    location: "Bilik Soal Siasat",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-rose-950/30 to-slate-950",
+                    speaker: "Dato' Azman",
+                    speakerColor: "bg-rose-500 text-white",
+                    activeChar: "azman",
+                    showAzman: true,
+                    sfx: "HERDIK!!",
+                    shake: true,
+                    text: "Saya tak pernah minum setitik pun arak tu! Saya cuma sewakan lori dan tanah wakaf terbiar tu kepada mereka. Apa kaitannya dengan saya?!"
+                },
+                {
+                    chapter: "Bidang 2: Soal Siasat (Hujah Hadis Hukum)",
+                    location: "Bilik Soal Siasat",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-rose-950/30 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "aina",
+                    showAzman: true,
+                    isChoice: true,
+                    text: "Dato' Azman berdalih bahawa dia tidak meminum arak, hanya menyediakan pengangkutan dan menceroboh tanah wakaf. Patahkan hujahnya!",
+                    choices: [
+                        { text: "10 golongan dilaknat berkaitan arak termasuk pembawa & penjual, dan harta wakaf haram diceroboh!", correct: true, reply: "TEPAT! Hadis Nabi SAW melaknat 10 golongan termasuk yang membawa dan menjual arak, manakala harta wakaf ialah hak Allah yang kekal!" },
+                        { text: "Hanya peminum arak sahaja yang berdosa dalam Islam", correct: false, reply: "Dato' Azman tersenyum puas: 'Dengar tu? Saya tak minum, jadi saya tak bersalah!'" },
+                        { text: "Tanah wakaf boleh dijual beli sesuka hati jika tidak digunakan", correct: false, reply: "Syafiq menggeleng: 'Salah Aina! Harta wakaf tidak boleh dijual, dihibah atau diwarisi!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 2: Penutup Kes Hadis Hukum",
+                    location: "Mahkamah Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    isFinal: true,
+                    text: "Kes selesai! Tanah wakaf dikembalikan kepada Majlis Agama Islam, dan suspek diberi kaunseling agar menghargai nyawa serta menjauhi perlakuan ganas."
+                }
+            ],
+
+            bidang3: [
+                {
+                    chapter: "Bidang 3: Usul Fiqh (Perbahasan Dalil)",
+                    location: "Perpustakaan Undang-Undang Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-900/40 via-slate-900 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    unlockEvidence: "usul_bukti",
+                    text: "Syafiq, peguam bela Dato' Azman cuba mengelirukan mahkamah menggunakan kaedah pentafsiran nas (Usul Fiqh). Mereka mendakwa sesuatu hukum lama masih terpakai walaupun telah dimansuhkan!"
+                },
+                {
+                    chapter: "Bidang 3: Usul Fiqh (Lafaz Am & Mutlak)",
+                    location: "Perpustakaan Undang-Undang Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-900/40 via-slate-900 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    text: "Mereka juga gagal membezakan antara lafaz Am (menyeluruh) dengan Khas, serta Mutlak dengan Muqayyad. Mari kita uji kefahaman Usul Fiqh sebelum masuk ke dewan perbicaraan!"
+                },
+                {
+                    chapter: "Bidang 3: Ujian Hujah Usul Fiqh",
+                    location: "Dewan Perbicaraan Syariah",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-indigo-950/40 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "aina",
+                    isChoice: true,
+                    text: "Pihak lawan bertanya: Apakah istilah Usul Fiqh bagi pengangkatan atau pembatalan hukum syarak terdahulu dengan dalil syarak yang datang kemudian?",
+                    choices: [
+                        { text: "Nasakh (Dalil pembatal dipanggil Nasikh, hukum dibatalkan dipanggil Mansukh)", correct: true, reply: "CEMERLANG! Nasakh membuktikan kesempurnaan syariat Islam yang bertahap mengikut kemaslahatan umat." },
+                        { text: "Takhsis al-Am (Mengkhususkan lafaz yang umum)", correct: false, reply: "Syafiq berbisik: 'Takhsis hanya menyempitkan skop lafaz Am, bukan membatalkan hukum terdahulu!'" },
+                        { text: "Taqyid al-Mutlak (Mengikat lafaz mutlak dengan sifat)", correct: false, reply: "Aina menggeleng: 'Itu definisi Taqyid, bukan pembatalan hukum terdahulu!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 3: Penutup Kes Usul Fiqh",
+                    location: "Dewan Perbicaraan Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    isFinal: true,
+                    text: "Hujah pihak lawan berjaya dipatahkan dengan disiplin ilmu Usul Fiqh yang tepat! Penguasaan kaedah istinbat hukum amat penting dalam menegakkan keadilan."
+                }
+            ],
+
+            bidang4: [
+                {
+                    chapter: "Bidang 4: Fekah (Munakahat & Jenayah)",
+                    location: "Pejabat Peguam Syarie",
+                    bgClass: "bg-gradient-to-b from-purple-900/40 via-slate-900 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    unlockEvidence: "fekah_bukti",
+                    text: "Kita menerima kes baharu melibatkan Puan Sarah. Suaminya menghilangkan diri tanpa memberi nafkah selama 2 tahun dan enggan melafazkan talak, malah mengugut untuk memukulnya."
+                },
+                {
+                    chapter: "Bidang 4: Fekah (Penyelesaian Syarak)",
+                    location: "Pejabat Peguam Syarie",
+                    bgClass: "bg-gradient-to-b from-purple-900/40 via-slate-900 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    text: "Islam tidak pernah membiarkan isteri tergantung tidak bertali. Kita perlu nasihatkan Puan Sarah cara pembubaran perkahwinan yang paling sesuai di Mahkamah Syariah."
+                },
+                {
+                    chapter: "Bidang 4: Khidmat Nasihat Fekah",
+                    location: "Mahkamah Rendah Syariah",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-purple-950/40 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "aina",
+                    isChoice: true,
+                    text: "Suami ghaib tanpa nafkah dan berlaku mudarat terhadap isteri, namun suami enggan melafazkan talak. Apakah jalan penyelesaian pembubaran perkahwinan terbaik?",
+                    choices: [
+                        { text: "Menuntut Fasakh di Mahkamah Syariah kerana kemudaratan & pengabaian nafkah", correct: true, reply: "TEPAT! Fasakh ialah pembatalan akad nikah oleh hakim disebabkan aib atau kemudaratan seperti suami gagal memberi nafkah." },
+                        { text: "Isteri melafazkan talak tiga kepada suaminya sendiri", correct: false, reply: "Syafiq menegur: 'Hak melafazkan talak berada di tangan suami, bukan isteri!'" },
+                        { text: "Membayar tebus talak (Khuluk) walaupun isteri teraniaya tanpa sebab", correct: false, reply: "Aina menjelaskan: 'Puan Sarah teraniaya dan tiada nafkah; Fasakh lebih adil tanpa perlu membayar tebus talak!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 4: Penutup Kes Fekah",
+                    location: "Mahkamah Rendah Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    isFinal: true,
+                    text: "Hakim telah meluluskan tuntutan Fasakh Puan Sarah! Manakala kes kecurian dan jenayah berat lain pula dirujuk mengikut kategori Hudud, Qisas, dan Takzir."
+                }
+            ],
+
+            bidang5: [
+                {
+                    chapter: "Bidang 5: Sejarah Perundangan Islam",
+                    location: "Kompleks Mahkamah Syariah Wilayah Persekutuan",
+                    bgClass: "bg-gradient-to-b from-rose-900/30 via-slate-900 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    unlockEvidence: "mahkamah_bukti",
+                    text: "Sejarah perundangan Islam di Malaysia sangat panjang—bermula dari zaman Kesultanan Melayu Melaka (Hukum Kanun Melaka) sehingga pindaan Perkara 121(1A) Perlembagaan Persekutuan."
+                },
+                {
+                    chapter: "Bidang 5: Hierarki Mahkamah Syariah",
+                    location: "Kompleks Mahkamah Syariah Wilayah Persekutuan",
+                    bgClass: "bg-gradient-to-b from-rose-900/30 via-slate-900 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    text: "Dato' Azman tidak berpuas hati dengan keputusan Mahkamah Tinggi Syariah dalam kes faraid bernilai RM5 juta tadi dan ingin membuat rayuan."
+                },
+                {
+                    chapter: "Bidang 5: Ujian Bidang Kuasa Mahkamah",
+                    location: "Kaunter Pendaftaran Rayuan",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-rose-950/30 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "aina",
+                    isChoice: true,
+                    text: "Jika seseorang ingin merayu keputusan yang telah diputuskan oleh Mahkamah Tinggi Syariah, ke manakah kes tersebut mesti dirujuk?",
+                    choices: [
+                        { text: "Mahkamah Rayuan Syariah (Peringkat tertinggi dalam hierarki Mahkamah Syariah)", correct: true, reply: "BETUL! Hierarki Mahkamah Syariah terdiri daripada Mahkamah Rendah Syariah, Mahkamah Tinggi Syariah, dan Mahkamah Rayuan Syariah." },
+                        { text: "Mahkamah Rendah Syariah", correct: false, reply: "Syafiq menggeleng: 'Mahkamah Rendah lebih rendah bidang kuasanya daripada Mahkamah Tinggi!'" },
+                        { text: "Mahkamah Majistret Sivil", correct: false, reply: "Aina mengingatkan: 'Perkara 121(1A) menetapkan Mahkamah Sivil tidak boleh campur tangan dalam bidang kuasa Mahkamah Syariah!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 5: Penutup Sejarah Perundangan",
+                    location: "Kompleks Mahkamah Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    isFinal: true,
+                    text: "Mahkamah Rayuan Syariah mengekalkan keputusan asal! Institusi kehakiman syariah di Malaysia terbukti teguh menegakkan keadilan."
+                }
+            ],
+
+            bidang6: [
+                {
+                    chapter: "Bidang 6: Tamadun Islam",
+                    location: "Muzium Kesenian Islam & Arkib Sejarah",
+                    bgClass: "bg-gradient-to-b from-teal-900/40 via-slate-900 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    unlockEvidence: "tamadun_bukti",
+                    text: "Kes terakhir kita ialah menyiasat ketulenan manuskrip sejarah perundangan Islam dari zaman Kerajaan Bani Abbasiyah dan Kerajaan Bani Uthmaniyah."
+                },
+                {
+                    chapter: "Bidang 6: Kegemilangan Tamadun",
+                    location: "Muzium Kesenian Islam & Arkib Sejarah",
+                    bgClass: "bg-gradient-to-b from-teal-900/40 via-slate-900 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-sky-400 text-slate-950",
+                    activeChar: "syafiq",
+                    text: "Pada zaman Bani Abbasiyah (Khalifah Harun al-Rasyid & al-Makmun) serta zaman Bani Uthmaniyah (Sultan Muhammad al-Fatih & Sulaiman al-Qanuni), ilmu dan syariah berkembang pesat."
+                },
+                {
+                    chapter: "Bidang 6: Pengesahan Artifak Tamadun",
+                    location: "Bilik Kurator Muzium",
+                    bgClass: "bg-gradient-to-b from-slate-950 via-teal-950/40 to-slate-950",
+                    speaker: "Inspektor Syafiq",
+                    speakerColor: "bg-amber-400 text-slate-950",
+                    activeChar: "syafiq",
+                    isChoice: true,
+                    text: "Manuskrip ini mencatatkan penubuhan institusi keilmuan terulung di Baghdad pada zaman Khalifah Harun al-Rasyid dan al-Makmun. Apakah nama institusi tersebut?",
+                    choices: [
+                        { text: "Baitul Hikmah (Pusat penterjemahan, penyelidikan dan perpustakaan agung)", correct: true, reply: "TEPAT SEKALI! Baitul Hikmah menjadi nadi kegemilangan ilmu sains, falsafah, dan syariah pada era Bani Abbasiyah!" },
+                        { text: "Masjid al-Qarawiyyin", correct: false, reply: "Aina tersenyum: 'Al-Qarawiyyin diasaskan oleh Fatimah al-Fihri di Fez, Maghribi, bukan di Baghdad.'" },
+                        { text: "Istana Topkapi", correct: false, reply: "Syafiq mengingatkan: 'Istana Topkapi ialah pusat pentadbiran Kerajaan Bani Uthmaniyah di Istanbul!'" }
+                    ]
+                },
+                {
+                    chapter: "Bidang 6: Tamat Semua Bidang KSSM!",
+                    location: "Kompleks Mahkamah Syariah",
+                    bgClass: "bg-gradient-to-b from-sky-500/30 via-amber-200/20 to-slate-950",
+                    speaker: "Aina",
+                    speakerColor: "bg-emerald-400 text-slate-950",
+                    activeChar: "aina",
+                    isFinal: true,
+                    text: "Tahniah! Anda telah berjaya menyelesaikan kesemua 6 Bidang Utama Pendidikan Syariah Islamiah Tingkatan 5 KSSM bersama Inspektor Syafiq dan Aina!"
+                }
+            ]
+        };
+
+        // Pemboleh Ubah Keadaan Permainan
+        let currentCaseId = 'bidang1';
+        let currentStep = 0;
+        let credibility = 3;
+        let unlockedEvidences = [];
+        let completedCases = [];
+        let cluesFound = { 1: false, 2: false };
+
+        // Jana Kad Pilihan 6 Bidang di Skrin Utama
+        function renderCaseSelector() {
+            const grid = document.getElementById('case-selector-grid');
+            grid.innerHTML = '';
+            Object.values(kssmCases).forEach(c => {
+                const isDone = completedCases.includes(c.id);
+                const btn = document.createElement('button');
+                btn.className = `p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border ${c.color} transition text-left flex flex-col justify-between group relative`;
+                btn.onclick = () => startCase(c.id);
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900 text-amber-400">${c.code}</span>
+                        <span class="text-base">${isDone ? '✅' : c.icon}</span>
+                    </div>
+                    <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-amber-300 transition">${c.title}</h3>
+                    <p class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">${c.subtitle}</p>
+                `;
+                grid.appendChild(btn);
+            });
+            document.getElementById('completed-counter').textContent = `Selesai: ${completedCases.length}/6 Bidang`;
+        }
+
+        // Fungsi Mula Kes Mengikut Bidang
+        function startCase(caseId) {
+            currentCaseId = caseId;
+            currentStep = 0;
+            credibility = 3;
+            cluesFound = { 1: false, 2: false };
+            resetHotspotsUI();
+
+            document.getElementById('title-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('hud-bar').classList.remove('hidden');
+            document.getElementById('scene-stage').classList.remove('hidden');
+            
+            updateHUD();
+            renderStep();
+        }
+
+        function startGame() {
+            startCase('bidang1');
+        }
+
+        // Papar Babak Semasa
+        function renderStep() {
+            const steps = casesStoryData[currentCaseId];
+            const step = steps[currentStep];
+            
+            // Kemas kini HUD
+            document.getElementById('chapter-badge').textContent = step.chapter;
+            document.getElementById('location-label').textContent = step.location;
+            
+            // Kemas kini Latar Belakang
+            const sceneBg = document.getElementById('scene-bg');
+            sceneBg.className = `absolute inset-0 transition-all duration-700 ${step.bgClass}`;
+
+            // Kesan Gegaran & SFX
+            const container = document.getElementById('game-container');
+            const sfxBanner = document.getElementById('sfx-banner');
+            const sfxText = document.getElementById('sfx-text');
+            
+            if (step.shake) {
+                container.classList.remove('shake-effect');
+                void container.offsetWidth; // trigger reflow
+                container.classList.add('shake-effect');
+            }
+
+            if (step.sfx) {
+                sfxText.textContent = step.sfx;
+                sfxBanner.classList.remove('hidden');
+                sfxText.classList.remove('sfx-animate');
+                void sfxText.offsetWidth;
+                sfxText.classList.add('sfx-animate');
+            } else {
+                sfxBanner.classList.add('hidden');
+            }
+
+            // Buka Bukti Automatik jika ada
+            if (step.unlockEvidence) {
+                addEvidence(step.unlockEvidence);
+            }
+
+            // Urus Paparan Watak
+            const syafiqEl = document.getElementById('char-syafiq');
+            const ainaEl = document.getElementById('char-aina');
+            const azmanEl = document.getElementById('char-azman');
+            const azmanSweat = document.getElementById('azman-sweat');
+
+            // Reset fokus watak
+            syafiqEl.classList.add('opacity-40', 'scale-95');
+            syafiqEl.classList.remove('opacity-100', 'scale-105');
+            ainaEl.classList.add('opacity-40', 'scale-95');
+            ainaEl.classList.remove('opacity-100', 'scale-105');
+
+            if (step.showAzman) {
+                azmanEl.classList.remove('hidden');
+                azmanEl.classList.add('opacity-40', 'scale-95');
+                azmanEl.classList.remove('opacity-100', 'scale-105');
+                if (step.azmanSweat) azmanSweat.classList.remove('hidden');
+                else azmanSweat.classList.add('hidden');
+            } else {
+                azmanEl.classList.add('hidden');
+            }
+
+            if (step.activeChar === 'syafiq') {
+                syafiqEl.classList.remove('opacity-40', 'scale-95');
+                syafiqEl.classList.add('opacity-100', 'scale-105');
+            } else if (step.activeChar === 'aina') {
+                ainaEl.classList.remove('opacity-40', 'scale-95');
+                ainaEl.classList.add('opacity-100', 'scale-105');
+            } else if (step.activeChar === 'azman') {
+                azmanEl.classList.remove('opacity-40', 'scale-95');
+                azmanEl.classList.add('opacity-100', 'scale-105');
+            } else if (step.activeChar === 'both') {
+                syafiqEl.classList.remove('opacity-40', 'scale-95');
+                ainaEl.classList.remove('opacity-40', 'scale-95');
+            }
+
+            // Kemas kini Kotak Dialog
+            const speakerBadge = document.getElementById('speaker-name');
+            speakerBadge.textContent = step.speaker;
+            speakerBadge.className = `px-3.5 py-1 rounded-md text-xs sm:text-sm font-extrabold uppercase tracking-wider ${step.speakerColor}`;
+            
+            document.getElementById('dialogue-type-tag').textContent = step.typeTag || "";
+            document.getElementById('dialogue-text').textContent = step.text;
+
+            // Urus Mod Siasatan Dokumen vs Pilihan vs Butang Seterusnya
+            const invOverlay = document.getElementById('investigation-overlay');
+            const choicesContainer = document.getElementById('choices-container');
+            const nextBtnWrapper = document.getElementById('next-btn-wrapper');
+            const nextBtn = document.getElementById('next-btn');
+
+            invOverlay.classList.add('hidden');
+            choicesContainer.classList.add('hidden');
+            nextBtnWrapper.classList.remove('hidden');
+
+            if (step.isInvestigation) {
+                invOverlay.classList.remove('hidden');
+                if (!cluesFound[1] || !cluesFound[2]) {
+                    nextBtnWrapper.classList.add('hidden');
+                }
+            } else if (step.isChoice) {
+                nextBtnWrapper.classList.add('hidden');
+                choicesContainer.classList.remove('hidden');
+                choicesContainer.innerHTML = '';
+                
+                step.choices.forEach((choice) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-amber-400 text-xs sm:text-sm font-semibold text-white transition flex items-center justify-between group";
+                    btn.innerHTML = `<span>${choice.text}</span><span class="text-amber-400 opacity-0 group-hover:opacity-100 transition">Pilih &rarr;</span>`;
+                    btn.onclick = () => handleChoice(choice);
+                    choicesContainer.appendChild(btn);
+                });
+            } else {
+                nextBtn.querySelector('span').textContent = step.isFinal ? "Tamatkan Kes" : "Seterusnya";
+            }
+        }
+
+        // Pemeriksaan Petunjuk pada Babak 1
+        function inspectClue(id) {
+            if (cluesFound[id]) return;
+            cluesFound[id] = true;
+
+            const btn = document.getElementById(`hotspot-${id}`);
+            btn.classList.remove('border-dashed', 'border-rose-500/70', 'border-sky-600/70');
+            btn.classList.add('border-solid', 'border-emerald-600', 'bg-emerald-500/20');
+            btn.querySelector('span:last-child').textContent = "✓ Ditemui";
+            btn.querySelector('span:last-child').className = "absolute -top-2 -right-2 bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded-full";
+
+            if (id === 1) {
+                addEvidence('imigresen');
+                document.getElementById('dialogue-text').textContent = "Aina: 'Tengok tarikh tandatangan Hj. Ismail ni—14 Ogos 2018. Saya boleh semak rekod imigresen beliau pada tarikh ni!'";
+            } else if (id === 2) {
+                addEvidence('forensik');
+                document.getElementById('dialogue-text').textContent = "Inspektor Syafiq: 'Perhatikan kualiti cetakan nombor siri ni. Ini cetakan laser moden, bukan mesin taip lama tahun 2018!'";
+            }
+
+            const count = (cluesFound[1] ? 1 : 0) + (cluesFound[2] ? 1 : 0);
+            document.getElementById('clue-progress').textContent = `Petunjuk: ${count}/2`;
+
+            if (count === 2) {
+                document.getElementById('next-btn-wrapper').classList.remove('hidden');
+            }
+        }
+
+        // Pengendalian Pilihan Soal Siasat
+        function handleChoice(choice) {
+            if (choice.correct) {
+                document.getElementById('choices-container').classList.add('hidden');
+                document.getElementById('dialogue-text').textContent = choice.reply;
+                document.getElementById('next-btn-wrapper').classList.remove('hidden');
+                document.getElementById('next-btn').querySelector('span').textContent = "Teruskan";
+            } else {
+                credibility--;
+                updateHUD();
+                const container = document.getElementById('game-container');
+                container.classList.remove('shake-effect');
+                void container.offsetWidth;
+                container.classList.add('shake-effect');
+
+                document.getElementById('dialogue-text').textContent = choice.reply;
+
+                if (credibility <= 0) {
+                    setTimeout(() => showEndScreen(false), 1200);
+                }
+            }
+        }
+
+        // Langkah Seterusnya
+        function nextStep() {
+            const steps = casesStoryData[currentCaseId];
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep();
+            } else {
+                showEndScreen(true);
+            }
+        }
+
+        // Tambah Bukti ke Fail
+        function addEvidence(key) {
+            if (!unlockedEvidences.includes(key)) {
+                unlockedEvidences.push(key);
+                updateHUD();
+                showToast(allEvidences[key].title);
+            }
+        }
+
+        // Kemas Kini Paparan HUD
+        function updateHUD() {
+            document.getElementById('evidence-count').textContent = unlockedEvidences.length;
+            const heartsContainer = document.getElementById('credibility-hearts');
+            heartsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const span = document.createElement('span');
+                span.textContent = i < credibility ? '⚖️' : '🖤';
+                heartsContainer.appendChild(span);
+            }
+        }
+
+        // Papar Notifikasi Toast
+        function showToast(title) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-title').textContent = title;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Buka / Tutup Modal Fail Bukti
+        function toggleEvidenceModal() {
+            const modal = document.getElementById('evidence-modal');
+            const list = document.getElementById('evidence-list');
+            
+            if (modal.classList.contains('hidden')) {
+                list.innerHTML = '';
+                if (unlockedEvidences.length === 0) {
+                    list.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Belum ada bukti direkodkan.</p>';
+                } else {
+                    unlockedEvidences.forEach(key => {
+                        const item = allEvidences[key];
+                        const div = document.createElement('div');
+                        div.className = "bg-slate-800/90 border border-amber-500/30 p-3 rounded-xl";
+                        div.innerHTML = `
+                            <h4 class="text-xs sm:text-sm font-bold text-amber-300 mb-1">📄 ${item.title}</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">${item.desc}</p>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Papar Skrin Tamat
+        function showEndScreen(isVictory) {
+            document.getElementById('hud-bar').classList.add('hidden');
+            document.getElementById('scene-stage').classList.add('hidden');
+            const endScreen = document.getElementById('end-screen');
+            endScreen.classList.remove('hidden');
+
+            const caseInfo = kssmCases[currentCaseId];
+            const summaryList = document.getElementById('end-summary-list');
+            summaryList.innerHTML = '';
+            caseInfo.summary.forEach(point => {
+                const li = document.createElement('li');
+                li.textContent = point;
+                summaryList.appendChild(li);
+            });
+
+            const nextBtn = document.getElementById('next-case-btn');
+            const caseKeys = Object.keys(kssmCases);
+            const currentIndex = caseKeys.indexOf(currentCaseId);
+
+            if (!isVictory) {
+                document.getElementById('end-icon').textContent = "⚠️";
+                document.getElementById('end-title').textContent = "HUJAH DIPATAHKAN!";
+                document.getElementById('end-title').className = "font-title text-3xl sm:text-5xl font-black text-rose-500 mb-3";
+                document.getElementById('end-desc').textContent = `Kredibiliti siasatan anda merosot dalam ${caseInfo.code}: ${caseInfo.title}. Semak semula nota ringkas di bawah dan cuba lagi!`;
+                nextBtn.textContent = "Cuba Semula Bidang Ini";
+                nextBtn.onclick = () => startCase(currentCaseId);
+            } else {
+                if (!completedCases.includes(currentCaseId)) {
+                    completedCases.push(currentCaseId);
+                }
+                document.getElementById('end-icon').textContent = "⚖️";
+                document.getElementById('end-title').textContent = `${caseInfo.code.toUpperCase()} SELESAI!`;
+                document.getElementById('end-title').className = "font-title text-3xl sm:text-5xl font-black text-amber-400 mb-3";
+                document.getElementById('end-desc').textContent = `Tahniah! Anda berjaya menguasai konsep utama ${caseInfo.title} (${caseInfo.subtitle}) dalam silibus Pendidikan Syariah Islamiah Tingkatan 5 KSSM.`;
+                
+                if (currentIndex < caseKeys.length - 1) {
+                    const nextKey = caseKeys[currentIndex + 1];
+                    nextBtn.textContent = `Siasat ${kssmCases[nextKey].code}: ${kssmCases[nextKey].title} →`;
+                    nextBtn.onclick = () => startCase(nextKey);
+                } else {
+                    nextBtn.textContent = "Kembali ke Menu Utama (Semua Selesai!)";
+                    nextBtn.onclick = returnToMenu;
+                }
+            }
+        }
+
+        function returnToMenu() {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('hud-bar').classList.add('hidden');
+            document.getElementById('scene-stage').classList.add('hidden');
+            document.getElementById('title-screen').classList.remove('hidden');
+            renderCaseSelector();
+        }
+
+        function resetHotspotsUI() {
+            [1, 2].forEach(id => {
+                const btn = document.getElementById(`hotspot-${id}`);
+                if (!btn) return;
+                btn.className = id === 1 
+                    ? "text-left p-2 rounded-lg border-2 border-dashed border-rose-500/70 bg-rose-500/10 hover:bg-rose-500/20 transition relative group"
+                    : "text-left p-2 rounded-lg border-2 border-dashed border-sky-600/70 bg-sky-500/10 hover:bg-sky-500/20 transition relative group";
+                btn.querySelector('span:last-child').textContent = "Periksa";
+                btn.querySelector('span:last-child').className = id === 1
+                    ? "absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse"
+                    : "absolute -top-2 -right-2 bg-sky-600 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse";
+            });
+            const prog = document.getElementById('clue-progress');
+            if (prog) prog.textContent = "Petunjuk: 0/2";
+        }
+
+        // Inisialisasi Menu Utama semasa halaman dimuatkan
+        window.onload = function() {
+            renderCaseSelector();
+        };
+    </script>
+</body>
+</html>
